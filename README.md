@@ -11,11 +11,11 @@ Second, define current directory: `cd SSN_Monjot_2024`
                                         *******************************
     Microstore_Analysis_Monjot_et_al._2023 
     |-> rawdata (sub-directory for trophic modes table and metadata)
-        |-> Table_S1.tsv (own in-house trophic modes database (Monjot et al., 2024))
-        |-> annotation_ko.tsv (The output of the KO annotation step using koFamScan)
-        |-> proteins_from_Unigenes_CEQ.fa (The proteins fasta file provided by the proteins prediction step after filtration)
-        |-> table_taxonomy.perUnigene.allUnigenes.tsv (The output of the taxonomic affiliation against MetaEuk)
         |-> ko_to_hierarchy.txt (KO id definition table from https://www.genome.jp/kegg-bin/show_brite?ko00001.keg)
+        |-> Table_S1.tsv (own in-house trophic modes database (Monjot et al., 2024))
+        |-> annotation_ko.tsv (The output of the KO annotation step using koFamScan) [https://doi.org/10.5281/zenodo.11972386]
+        |-> proteins_from_Unigenes_CEQ.fa (The proteins fasta file provided by the proteins prediction step after filtration) [https://doi.org/10.5281/zenodo.11972386]
+        |-> table_taxonomy.perUnigene.allUnigenes.tsv (The output of the taxonomic affiliation against MetaEuk) [https://doi.org/10.5281/zenodo.11972386]
     |-> script (sub-directory for minor scripts)
         |-> 1_Choose_Treshold.R (script to test all identity treshold and determine functional homogeneity)
         |-> 2_Igraph (script to process CCs graph)
@@ -25,10 +25,8 @@ Second, define current directory: `cd SSN_Monjot_2024`
         |-> 0D_Cross-TranscriptID-ProteinID.py (script to link transcripts data and proteins ID)
         |-> environment_REnv_Monjot_2024A.yml (conda environment)
         |-> REnv_Monjot_2023A_packages (local repository to R packages installation)
-    |-> Preprocess_setup.sh (script to launch conda environment setup)
-    |-> Downloading_metaT_rawdata.sh (script to launch  metatranscriptomic catalog genes download)
-    |-> R_3_setup.sh (script to launch R dependencies installation scripts)
-    |-> Retrieve_Figures.sh (script to retrieve published figures from result directory)
+        |-> Preprocess_setup.sh (script to launch conda environment setup)
+        |-> 4_Retrieve_Figures.sh (script to retrieve published figures from result directory)
 
     
 ## 1. Conda environment and dependencies installation
@@ -57,30 +55,24 @@ This installs the following tools:
 
 ### R installation (+ dependencies) if necessary
 
-Install R dependencies with the following script: 
-    
-    bash R_3_setup.sh
+Install R packages: 
 
-* script: R_3_setup.sh
-* This takes 77 min on [Dual CPU] Intel(R) Xeon(R) CPU E5-2670 with 512 Go of RAM
+    * ggplot2           * ggstatsplot
+    * plyr              * stringr
+    * dplyr             * treemapify
+    * tidyr             * elementalist
+    * cowplot           * gplots
+    * paletteer         * igraph
+    * reshape2          * ggraph
+    * varhandle         * tidygraph
+    * ggrepel           * grid
+    * ggpubr            * FactoMineR
+    * ggsci             * factoextra
+    * scales            * rstatix
+    * hrbrthemes        * ggh4x
+    * svglite           * fmsb
+    * ggupset
 
-This operation installs the following R packages:
-
-    * GUniFrac              * reshape2                  * vegan
-    * ggplot2               * SARTools                  * gtools
-    * tidyr                 * ComplexHeatmap            * SciViews
-    * dplyr                 * DESeq2                    * paletteer
-    * cowplot               * dada2                     * cluster
-    * ggrepel               * elementalist              * stringr
-    * ggsci                 * ggh4x                     * NbClust
-    * scales                * R.utils                   * BiocManager
-    * varhandle             * scatterplot3d             * tibble
-    * treemap               * car                       * svglite
-    * VennDiagram           * rgl                       * treemapify
-    * FactoMineR            * data.table                * hrbrthemes   
-    * RColorBrewer          * devtools                  * psych
-    * factoextra            * ggExtra                   * ggpubr
-    * reshape2              * gplots
 
 ## 2. Metatranscriptomics data - filtering and annotation
 
@@ -217,19 +209,28 @@ first field. This type of result is tagged with "_significant_" in the result
 2. If the current protein has **no** significant hit, keep the best hit if its
 _e-value_ is &le; 1.e-5.
 
-Results of annotation process are available [here](https://zenodo.org/api/records/11972386/files-archive).
-Download these data and place it in the rawdata directory for use.
+Results of annotation process are available [here](https://doi.org/10.5281/zenodo.11972386).
+Download these files and place it in the rawdata directory for use.
 
 ## 3. Trophic mode database and SSN inputs
 
-### Generate a table ready to be filled in order to generate trophic mode database
+### Trophic mode database
+
+We generate a table ready to be filled corresponding to the model of the trophic mode database : 
 
 ```bash
 bash script/0B_Prepare_taxonomy_files.sh
 ```
 
-Then, we have to complete the resulted table Table_assoc_Temp.tsv using Bibliography to create the trophic mode database.
-This table correspond to the Supplementray file *Table_S1.tsv* and is provided in the rawdata directory.
+Then, we have to complete the resulted table Table_assoc_Temp.tsv using Bibliography to create the final trophic mode database.
+This table correspond to the Supplementary file *Table_S1.tsv* and is provided in the rawdata directory.
+
+This table was developed as part of a metatranscriptomic study (Monjot et al., 2023) using bibliography (362 scientific articles), 
+to link, when possible, proteins taxonomic affiliation (i.e. 1 052 distinct affiliations), to trophic modes.
+
+Taxonomic ranks are specified with the following code: d_(Division), k_(Kingdom), p_(Phylum), c_(Class), o_(Order), f_(Family) and g_(Genus). 
+Trophic modes were identified using the following codes: PHOTO: photo-osmo-mixotrophs, MIXO: photo-osmo-phago-mixotrophs, HET: heterotrophs, 
+SAP: saprotrophs and PARA: parasites (facultative and obligate).
 
 ### Metadata files
  
@@ -240,7 +241,7 @@ python3 script/0C_Resume_METADATA.py > rawdata/out_RESUME.txt
 python3 script/0D_Cross-TranscriptID-ProteinID.py > rawdata/out-RESUME-PROTID.txt
 ```
 
-Only informations relating of proteins affiliated to microbial eukaryotes should be retained (by removing those affiliated to pluri- or multi-cellular organisms):
+Only informations characterizing proteins affiliated to microbial eukaryotes should be retained (by removing those affiliated to pluri- or multi-cellular organisms):
 
 ```bash
 echo -e "ID_Protein"\\t"ID_transcript"\\t"ncbi_taxonomy"\\t"Taxonomy"\\t"SpeciesInDataset"\\t"TRT_1"\\t"TRT_2"\\t"TYP_1"\\t"TYP_2"\\t"ko" > Metadata_Unicellular.txt
@@ -249,6 +250,8 @@ cat rawdata/out-RESUME-PROTID.txt | grep -v "Pluri- or multi-cellular" >> Metada
 
 ### Fasta file
 
+From the inital fasta file, we remove all sequences affiliated to pluri- or multi-cellular organisms:
+
 ```bash
 cat rawdata/out-RESUME-PROTID.txt | grep -v "Pluri- or multi-cellular" | cut -f1 > rawdata/trsc_Unicellular.txt
 seqtk subseq rawdata/proteins_from_Unigenes_CEQ.fa rawdata/trsc_Unicellular.txt > proteins_from_Unigenes_CEQ_Unicellular.fasta
@@ -256,14 +259,16 @@ seqtk subseq rawdata/proteins_from_Unigenes_CEQ.fa rawdata/trsc_Unicellular.txt 
 
 ## 4. SSN analysis
 
+
+
 ## 5. Retrieve article figures
 
 To retrieve article figures, run following script:
 
-    bash Retrieve_Figures.sh V4-unified-correct-paired-out-compo
+    bash script/4_Retrieve_Figures.sh 80_80_1e-50
 
-* script: Retrieve_Figures.sh
-* argument 1: V4-unified-correct-paired-out-compo
+* script: 4_Retrieve_Figures.sh
+* argument 1: 80_80_1e-50
 * This takes just a few seconds on [Dual CPU] Intel(R) Xeon(R) CPU E5-2670 with 512 Go of RAM
 
-The resulting figures can be found in *Monjot_etal_2023/* directory.
+The resulting figures can be found in *Monjot_etal_2024/* directory.
