@@ -1,0 +1,307 @@
+configfile: "config/config.yml"
+
+def get_files(config):
+    import glob
+    return glob.glob(config)
+
+def get_attrib_files(config):
+    import glob
+    files = glob.glob(config)
+    if len(files) == 1:
+        f = []
+        with open(files[0], "r") as fin:
+            if not os.path.exists(fin.readline()):
+                return [f.split("/")[-1].split(".")[0] for f in files]
+            f.extend(line.strip() for line in fin)
+        return [i.split("/")[-1].split(".")[0] for i in f]
+    return [i.split("/")[-1].split(".")[0] for i in files]
+
+# ==================================== GET CONFIG / GET FILES ==================================== #
+
+try:
+    FASTA = get_files(config["fasta"])
+    CAT_F = f"results/{config['concat_file']}"
+    DDB = f"results/{config['diamond_database']}"
+except:
+    FASTA = ""
+    CAT_F = ""
+    DDB = ""
+
+DBT = f"results/{config['diamond_blastp']}"
+AN_F = get_files(config["annotation"])
+ATBT = config["attributes"]
+COL = config["columns"]
+#NET_F = config["network_file"]
+#NGB = config["neighbours"]
+PCOV = config["filtration"]["overlap"]
+if not PCOV:
+    PCOV = [80]
+PIDENT = config["filtration"]["identity"]
+if not PIDENT:
+    PIDENT = [80]
+EVAL = config["filtration"]["evalue"]
+if not EVAL:
+    EVAL = ["1e-50"]
+#ISOL = config["isolated"]
+IDX = f"index/{config['indices']}"
+DIS = config["distribution"]
+
+DISTRIB = expand("distribution/{distribution}.pdf", distribution= DIS)
+
+FILTR = expand("results/diamond_ssn_{overlap}_{identity}_{eval}",
+                overlap=PCOV,
+                identity=PIDENT,
+                eval=EVAL)
+FILTR_S = expand("results/diamond_ssn_{overlap}_{identity}_{eval}_stats",
+                  overlap=PCOV,
+                  identity=PIDENT,
+                  eval=EVAL)
+EDGES = expand("results/diamond_ssn_{overlap}_{identity}_{eval}.edges",
+                overlap=PCOV,
+                identity=PIDENT,
+                eval=EVAL)
+VERTI = expand("results/diamond_ssn_{overlap}_{identity}_{eval}.vertices",
+                overlap=PCOV,
+                identity=PIDENT,
+                eval=EVAL)
+
+if not config["attributes"]:
+    ATTRIB = expand("results/attributes/{files}.attributes",
+    files=get_attrib_files(config["annotation"]))
+else:
+    ATTRIB = config["attributes"]
+
+#VER_ATTRIB = expand("results/diamond_ssn_{overlap}_{identity}_{eval}_with_attributes.vertices",
+#                overlap=PCOV,
+#                identity=PIDENT,
+#                eval=EVAL)
+
+#COL_RESLTS = expand("results/{overlap}_{identity}_{eval}_ssn_{col}_results",
+#                overlap=PCOV,
+#                identity=PIDENT,
+#                eval=EVAL,
+#                col=COL)
+
+#HOM_SCORE = expand("results/{overlap}_{identity}_{eval}_{col}_homogeneity_score",
+#                overlap=PCOV,
+#                identity=PIDENT,
+#                eval=EVAL,
+#                col=COL)
+
+#ABUND_MAT = expand("results/{overlap}_{identity}_{eval}_{col}_abundance_matrix",
+#                overlap=PCOV,
+#                identity=PIDENT,
+#                eval=EVAL,
+#                col=COL)
+
+
+# ================================================================================================ #
+
+# ALL RULES
+rule all:
+    input:
+        CAT_F,
+        DDB,
+        DBT,
+        DISTRIB,
+        IDX,
+        FILTR,
+        FILTR_S,
+        EDGES,
+        VERTI,
+        ATTRIB,
+        #VER_ATTRIB,
+        #COL_RESLTS
+
+
+if FASTA:
+    # CONCATENATE ALL FASTA FILES
+    rule cat:
+        input:
+            FASTA
+        output:
+            CAT_F,
+            IDX
+        log:
+            "logs/cat.log"
+        benchmark:
+            "benchmarks/cat.bench"
+        script:
+            "modules/cat.py"
+
+    # CREATES A DIAMOND DATABASE
+    rule diamond_db:
+        input:
+            CAT_F
+        output:
+            DDB
+        log:
+            "logs/diamond_db.log"
+        benchmark:
+            "benchmarks/diamond_db.bench"
+        run:
+            import subprocess
+            import time
+            from subprocess import DEVNULL
+
+            with open(str(log),"w") as l:
+                s = time.time()
+                l.write("*** Getting command ***\n")
+                command_client = ["diamond-aligner", "makedb", "--in", str(input),  "--threads", str(workflow.cores), "--db",
+                                  str(output)]
+                command_cluster = ["diamond", "makedb", "--in", str(input),  "--threads", str(workflow.cores), "--db", str(output)]
+                l.write("*** Creation of Diamond database ***\n")
+                try:
+                    subprocess.call(command_client,stdout=DEVNULL)
+
+                except:
+                    subprocess.call(command_cluster,stdout=DEVNULL)
+                e = time.time()
+                l.write(f"Database created in {round(e - s,2)} seconds")
+
+    # Carries out a blastp
+    rule diamond_blastp:
+        input:
+            db=DDB,
+            fasta=CAT_F
+        output:
+            DBT
+        log:
+            "logs/diamond_blastp.log"
+        benchmark:
+            "benchmarks/diamond_blatp.bench"
+        run:
+            import subprocess
+            import time
+            from subprocess import DEVNULL
+            with open(str(log),"w") as l:
+                s = time.time()
+                l.write("*** Getting command ***\n")
+
+                command_client = ["diamond-aligner", "blastp", "-d", str(input.db), "--threads", str(workflow.cores), "-q",
+                                  str(input.fasta), "-o", str(output), "-e", "1e-5", "--sensitive",
+                                  "-f", "6", "qseqid", "qlen", "qstart", "qend", "sseqid", "slen",
+                                  "sstart", "send", "length", "pident", "ppos", "score", "evalue",
+                                  "bitscore"]
+
+                command_cluster = ["diamond", "blastp", "-d", str(input.db), "--threads", str(workflow.cores), "-q", str(input.fasta),
+                                   "-o", str(output), "-e", "1e-5", "--sensitive", "-f", "6",
+                                   "qseqid", "qlen", "qstart", "qend", "sseqid", "slen", "sstart",
+                                   "send", "length", "pident", "ppos", "score", "evalue",
+                                   "bitscore"]
+                l.write("*** Alignment of sequences ***\n")
+                try:
+                    subprocess.call(command_client,stdout=DEVNULL)
+
+                except:
+                    subprocess.call(command_cluster,stdout=DEVNULL)
+                e = time.time()
+                l.write(f"Alignment done in {round(e - s,2)} seconds")
+
+# CREATE DISTRIBUTION GRAPHS
+if DISTRIB:
+    rule distribution:
+        input:
+            DBT
+        output:
+            DISTRIB
+        log:
+            "logs/distribution.log"
+        benchmark:
+            "benchmarks/distribution.bench"
+        script:
+            "modules/distribution.py"
+
+# FILTER THE DIAMOND BLASTP OUTPUT
+rule filter:
+    input:
+        DBT
+    params:
+        overlap=PCOV,
+        identity=PIDENT,
+        evalue=EVAL
+    output:
+        filtr=FILTR,
+        stats=FILTR_S
+    log:
+        "logs/filter.log"
+    benchmark:
+        "benchmarks/filter.bench"
+    script:
+        "modules/filter.py"
+
+
+if config["conversion"]:
+    # CONVERT DIAMOND OUTPUT INTO IGRAPH-PYTHON INPUT
+    rule diamond2graph:
+        input:
+            FILTR
+        output:
+            EDGES,
+            VERTI
+        log:
+            "logs/diamond2graph.log"
+        benchmark:
+            "benchmarks/diamond2graph.bench"
+        script:
+            "modules/diamond2graph.py"
+
+# ASSOCIATE EVERY ATTRIBUTES OF A SEQUENCE ID
+rule attributes:
+        input:
+            an_files=AN_F,
+            indices=IDX
+        output:
+            ATTRIB
+        log:
+            "logs/attributes.log"
+        benchmark:
+            "benchmarks/attributes.bench"
+        params:
+            columns=COL
+        script:
+            "modules/attributes.py"
+
+
+#if not config["attributes"]:
+    # ADDS ATTRIBUTES TO THE VERTEX FILE
+#    rule vertices:
+#        input:
+#            attrib=ATTRIB,
+#            vertices=VERTI,
+#            indices=IDX
+#        output:
+#            VER_ATTRIB
+#        log:
+#            "logs/add_attributes.log"
+#        benchmark:
+#            "benchmarks/add_attributes.bench"
+#        params:
+#            columns=COL
+#        script:
+#            "modules/add.py"
+
+# CREATES A SEQUENCE SIMILARITY NETWORK AND EXTRACT RESULTS
+#rule network:
+#    input:
+#        edges=EDGES,
+#        vertices=VER_ATTRIB
+#    output:
+#        rslts = COL_RESLTS,
+#        homscore = HOM_SCORE,
+#        abund_mat = ABUND_MAT
+#    log:
+#        "logs/network.log"
+#    benchmark:
+#        "benchmarks/network.bench"
+#    params:
+#        neighbours=NGB,
+#        columns=COL,
+#        isolated=ISOL,
+#        similarity=NET_F,
+#        overlap=PCOV,
+#        identity=PIDENT,
+#        eval=EVAL,
+#        indices=IDX
+#    script:
+#        "modules/network.py"

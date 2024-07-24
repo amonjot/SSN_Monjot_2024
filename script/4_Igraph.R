@@ -37,10 +37,10 @@ lapply(pkg, require, character.only = TRUE)
 if (inputmode == TRUE) {
   current <- dirname(rstudioapi::getSourceEditorContext()$path)
   setwd(current)
-  output <- paste(current,"../result/Lagoon",input, sep = "/")
+  output <- paste(current,"../result/Lagoon_output",input, sep = "/")
 }
 if (inputmode == FALSE) {
-  output <- paste("../result/Lagoon",input, sep = "/")
+  output <- paste("result/Lagoon_output",input, sep = "/")
 }
 # Set working directory
 if (dir.exists(output) == FALSE) {dir.create(output)}
@@ -155,7 +155,7 @@ if (dir.exists(output) == TRUE) { setwd(output) }
 edges_input <- paste0("diamond_ssn_",input,".edges")
 edges_input_df <- read.csv(edges_input,sep = ";")
 # All input proteins with metadata
-attributes_input <- "../Metadata_Unicellular_set.attributes"
+attributes_input <- "../Metadata_Unicellular.attributes"
 attributes_input_df <- read.csv(attributes_input,sep = ";")
 
 # Result of clusterisation: CCs + Metadata
@@ -170,7 +170,7 @@ stat_input_df[stat_input_df=="NA"]<-"Unassigned"
 stat_input_df[,"TRT_1"][stat_input_df[,"TRT_1"]=="SAP" & stat_input_df[,"TYP_1"]=="Obligate"]<- "PARA"
 #
 # Input and format kegg database ------------------------------------------
-ko_db <- read.csv("../ko_to_hierarchy.txt",sep="\t")
+ko_db <- read.csv("../../../rawdata/ko_to_hierarchy.txt",sep="\t")
 ko_db <- ko_db %>% filter(lvl_A_val %in% c("Metabolism"))
 #
 # General_statistic -------------------------------------------------------

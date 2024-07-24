@@ -1,0 +1,115 @@
+# ======================================== PREPROCESSING ========================================= #
+
+# Either a file containing all paths to fasta format file(s), or path(s) to fasta format file(s).
+# if several files are provided the program will concatenate all the files first.
+#fasta: tr/*
+fasta: tr_files_test/*
+
+# If you already have some files that you created before, and you wish them to be processed by the
+# workflow, you can put their names in the appropriate place in this config file.
+
+# The path of the file containing all sequences you need to treat. By default,
+# this file will be named "all_data.fasta".
+concat_file: all_data.fasta
+
+# The path of the diamond database format created by the command "makedb" of diamond-aligner
+# software. By default, this file will be named "all_data_db.dmnd".
+diamond_database: all_data_db.dmnd
+
+# The path of the diamond blastp file created by the command "blastp" of diamond-aligner software.
+# By default, this file will be named "diamond_ssn"
+diamond_blastp: diamond_ssn
+
+# The name of the file containing the index associated with the sequence (to reduce memory usage).
+indices: seqname_index.indices
+
+# ===================================== DISTRIBUTION GRAPHS ====================================== #
+
+distribution:
+  - overlap
+  - identity
+  - evalue
+
+
+# ========================================== FILTRATION ========================================== #
+
+
+# Put the filtration parameter you want to use to filter the blastp.
+# note that the filtration will always be >= of the value you put on this parameter.
+
+filtration:
+  overlap:
+  identity:
+    - 100
+    - 95
+    - 90
+    - 85
+    - 80
+    - 75
+    - 70
+    - 65
+  evalue:
+
+# If you already have filtered file(s), you can put their path below, else, leave blank
+filtered_files:
+
+
+# ========================================== ATTRIBUTES ========================================== #
+
+
+# File(s) containing the attributes associated to the sequences ID.
+#annotation: an/*
+annotation: an_files_test/Metadata_Unicellular.txt
+
+
+# Columns you want to keep in you sequence similarity network (please put them in the same order as
+# in your file)
+# Example:
+
+# If your file looks like this :
+
+# peptides | length | database | date
+# 1        | 100    | A        | 12-06-19
+# 2        | 105    | B        | 12-06-19
+
+# If you only want the first three columns as attributes for you sequence similarity network,
+# the section "columns" of the config file should be like this :
+# columns:
+#   - peptides
+#   - database
+
+columns:
+  - ID_Protein
+  - Taxonomy
+  - TRT_1
+  - TRT_2
+  - TYP_1
+  - TYP_2
+  - ko
+
+
+# If you already have an attributes table, you can put the path to it here, else, leave blank
+attributes:
+
+
+# ========================================== CONVERSION ========================================== #
+
+
+# If you have a diamond blastp output already filtered but not converted to Igraph input, type "true"
+# else, leave blank
+conversion: true
+
+
+# ======================================= NETWORK CREATION ======================================= #
+
+
+# If you want to extract information of a preformed network saved in a file,
+# type the path of the file containing the graph, else, leave blank
+#network_file:
+
+# The number of minimum neighbours you want in your connected components of the sequence similarity
+# network
+#neighbours: 3
+
+# If you want to REMOVE ISOLATED nodes, insert "yes", else leave blank.
+#isolated: yes

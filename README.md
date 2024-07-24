@@ -9,7 +9,7 @@ Second, define current directory: `cd SSN_Monjot_2024`
                                         *******************************
                                             Directory organization
                                         *******************************
-    Microstore_Analysis_Monjot_et_al._2023 
+    SSN_Analysis_Monjot_et_al._2024
     |-> rawdata (sub-directory for trophic modes table and metadata)
         |-> ko_to_hierarchy.txt (KO id definition table from https://www.genome.jp/kegg-bin/show_brite?ko00001.keg)
         |-> Table_S1.tsv (own in-house trophic modes database (Monjot et al., 2024))
@@ -25,7 +25,6 @@ Second, define current directory: `cd SSN_Monjot_2024`
         |-> 0D_Cross-TranscriptID-ProteinID.py (script to link transcripts data and proteins ID)
         |-> environment_REnv_Monjot_2024A.yml (conda environment)
         |-> REnv_Monjot_2023A_packages (local repository to R packages installation)
-        |-> Preprocess_setup.sh (script to launch conda environment setup)
         |-> 4_Retrieve_Figures.sh (script to retrieve published figures from result directory)
 
     
@@ -36,21 +35,24 @@ Install miniconda following the standard procedure (https://docs.conda.io/projec
 
 Then, install conda environment with the following script: 
 
-    bash script/Preprocess_setup.sh
-
-* script: Preprocess_setup.sh
-* This takes 1 min on [Dual CPU] Intel(R) Xeon(R) CPU E5-2670 with 512 Go of RAM
+```bash
+conda env create -f script/environment_REnv_Monjot_2024A.yml
+conda activate REnv_Monjot_2024A
+``` 
 
 This installs the following tools:
 
-    * cutadapt v4.1
-    * r-base v4.2.2
-    * imagemagick v7.1.0_52
-    * python v3.9.15
-    * perl v5.32.1
-    * cmake v3.22.1
-    * parallel v20230722
-    * numerous libraries (details in script/environment_REnv_Monjot_2023A.yml)
+- diamond=2.1.7=h43eeafb_1
+- numpy=1.26.4=py311h64a7726_0
+- pandas=2.2.2=py311h14de704_1
+- parallel=20230722=ha770c72_0
+- pip=24.0=pyhd8ed1ab_0
+- python=3.11.9=hb806964_0_cpython
+- r-base=4.3.3
+- seqtk=1.4=he4a0461_2
+- snakemake=8.13.0=hdfd78af_0
+- biopython=1.79=py311hd4cff14_3
+- matplotlib=3.8.4=py311h38be061_2
 
 ### R installation (+ dependencies) if necessary
 
@@ -231,7 +233,7 @@ Download these files and place it in the rawdata directory for use.
 We generate a table ready to be filled corresponding to the model of the trophic mode database : 
 
 ```bash
-bash script/0B_Prepare_taxonomy_files.sh
+bash script/0A_Prepare_taxonomy_files.sh
 ```
 
 Then, we have to complete the resulted table Table_assoc_Temp.tsv using Bibliography to create the final trophic mode database.
@@ -249,8 +251,8 @@ SAP: saprotrophs and PARA: parasites (facultative and obligate).
 Cross all proteins informations: 
 
  ```bash
-python3 script/0C_Resume_METADATA.py > rawdata/out_RESUME.txt
-python3 script/0D_Cross-TranscriptID-ProteinID.py > rawdata/out-RESUME-PROTID.txt
+python3 script/0B_Resume_METADATA.py > rawdata/out_RESUME.txt
+python3 script/0C_Cross-TranscriptID-ProteinID.py > rawdata/out-RESUME-PROTID.txt
 ```
 
 Only informations characterizing proteins affiliated to microbial eukaryotes should be retained (by removing those affiliated to pluri- or multi-cellular organisms):
@@ -271,15 +273,47 @@ seqtk subseq rawdata/proteins_from_Unigenes_CEQ.fa rawdata/trsc_Unicellular.txt 
 
 ## 4. SSN analysis
 
+### 4.A Process network
 
+```bash
+mv proteins_from_Unigenes_CEQ_Unicellular.fasta SSN_env/tr_files_test/
+mv Metadata_Unicellular.txt SSN_env/an_files_test/
+cd SSN_env/
+snakemake -c 16
+# nohup snakemake -c 16 --rerun-incomplete > out.snakemake.txt &
+```
+
+### 4.B Find clusters and retrieve results
+
+```bash
+nohup parallel -j 16 -k 'python3 script/1_Find_cluster.py {}' ::: 80_65_1e-50 80_70_1e-50 80_75_1e-50 80_80_1e-50 80_85_1e-50 80_90_1e-50 80_95_1e-50 80_100_1e-50 > out.find_cluster.txt &
+```
+
+```bash
+bash script/2_Retrieve_result.sh
+```
+
+### 4.C Choose a Treshold for SSN
+
+```bash
+Rscript script/3_Choose_Treshold.R
+``
+
+### 4.D Analyses CC with the appropriate treshold
+
+```
+Rscript script/4_Igraph.R 80_80_1e-50
+```
 
 ## 5. Retrieve article figures
 
 To retrieve article figures, run following script:
 
-    bash script/4_Retrieve_Figures.sh 80_80_1e-50
+```bash
+bash script/5_Retrieve_Figures.sh 80_80_1e-50
+```
 
-* script: 4_Retrieve_Figures.sh
+* script: 5_Retrieve_Figures.sh
 * argument 1: 80_80_1e-50
 * This takes just a few seconds on [Dual CPU] Intel(R) Xeon(R) CPU E5-2670 with 512 Go of RAM
 

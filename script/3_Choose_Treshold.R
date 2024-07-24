@@ -25,10 +25,10 @@ lapply(pkg, require, character.only = TRUE)
 if (inputmode == TRUE) {
   current <- dirname(rstudioapi::getSourceEditorContext()$path)
   setwd(current)
-  output <- paste(current,"../result/Lagoon", sep = "/")
+  output <- paste(current,"../result/Lagoon_output", sep = "/")
 }
 if (inputmode == FALSE) {
-  output <- paste("result/Lagoon", sep = "/")
+  output <- paste("result/Lagoon_output", sep = "/")
 }
 # Set working directory
 if (dir.exists(output) == FALSE) {dir.create(output)}
