@@ -276,6 +276,8 @@ seqtk subseq rawdata/proteins_from_Unigenes_CEQ.fa rawdata/trsc_Unicellular.txt 
 ### 4.A Process network
 
 ```bash
+mkdir SSN_env/tr_files_test/
+mkdir SSN_env/an_files_test/
 mv proteins_from_Unigenes_CEQ_Unicellular.fasta SSN_env/tr_files_test/
 mv Metadata_Unicellular.txt SSN_env/an_files_test/
 cd SSN_env/
