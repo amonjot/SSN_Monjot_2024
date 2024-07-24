@@ -297,7 +297,7 @@ bash script/2_Retrieve_result.sh
 
 ```bash
 Rscript script/3_Choose_Treshold.R
-``
+```
 
 ### 4.D Analyses CC with the appropriate treshold
 
