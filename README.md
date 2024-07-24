@@ -287,9 +287,6 @@ snakemake -c 16
 
 ```bash
 nohup parallel -j 16 -k 'python3 script/1_Find_cluster.py {}' ::: 80_65_1e-50 80_70_1e-50 80_75_1e-50 80_80_1e-50 80_85_1e-50 80_90_1e-50 80_95_1e-50 80_100_1e-50 > out.find_cluster.txt &
-```
-
-```bash
 bash script/2_Retrieve_result.sh
 ```
 
