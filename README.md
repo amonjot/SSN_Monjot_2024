@@ -16,18 +16,25 @@ Second, define current directory: `cd SSN_Monjot_2024`
         |-> annotation_ko.tsv (The output of the KO annotation step using koFamScan) [https://doi.org/10.5281/zenodo.11972386]
         |-> proteins_from_Unigenes_CEQ.fa (The proteins fasta file provided by the proteins prediction step after filtration) [https://doi.org/10.5281/zenodo.11972386]
         |-> table_taxonomy.perUnigene.allUnigenes.tsv (The output of the taxonomic affiliation against MetaEuk) [https://doi.org/10.5281/zenodo.11972386]
-    |-> script (sub-directory for minor scripts)
-        |-> 1_Choose_Treshold.R (script to test all identity treshold and determine functional homogeneity)
-        |-> 2_Igraph (script to process CCs graph)
-        |-> 0A_parse_ko_hits.py (script to parse ko annotation using the first hit) 
-        |-> 0B_Prepare_taxonomy_files.sh (script to Prepare the trophic mode database model)
-        |-> 0C_Resume_METADATA.py (script to resume data related to transcripts)
-        |-> 0D_Cross-TranscriptID-ProteinID.py (script to link transcripts data and proteins ID)
+    |-> script (sub-directory for scripts)
+        |-> 0A_Prepare_taxonomy_files.sh (script to Prepare the trophic mode database model)
+        |-> 0B_Resume_METADATA.py (script to resume data related to transcripts)
+        |-> 0C_Cross-TranscriptID-ProteinID.py (script to link transcripts data and proteins ID)
+        |-> 1_Find_cluster.py (script to sort all Connected Components (CC) of the general sequence similarity network (SSN))
+        |-> 2_Retrieve_result.sh (script to create a result directory with all SSNs and their CCs)
+        |-> 3_Choose_Treshold.R (script to test all identity treshold and determine functional homogeneity)
+        |-> 4_Igraph.R (script to process CCs graph)
+        |-> 5_Retrieve_Figures.sh (script to retrieve published figures from result directory)
         |-> environment_REnv_Monjot_2024A.yml (conda environment)
-        |-> REnv_Monjot_2023A_packages (local repository to R packages installation)
-        |-> 4_Retrieve_Figures.sh (script to retrieve published figures from result directory)
+    |-> metatranscriptome_scripts (sub-directory for scripts related to metatranscriptomic)
+        |-> parse_ko_hits.py (script to parse ko annotation using the first hit)
+        |-> map_taxo_to_unigene.py (script to map taxonomic affiliation of proteins to unigene)
+    |-> SSN_env (sub-directory with snakemake pipeline to process SSN)
+        |-> Snakefile
+        |-> modules
+        |-> config
+        
 
-    
 ## 1. Conda environment and dependencies installation
 
 ### Conda and dependencies
@@ -48,15 +55,15 @@ This installs the following tools:
 - parallel=20230722=ha770c72_0
 - pip=24.0=pyhd8ed1ab_0
 - python=3.11.9=hb806964_0_cpython
-- r-base=4.3.3
+- r-base=4.3.3=hf0d99cb_1
 - seqtk=1.4=he4a0461_2
 - snakemake=8.13.0=hdfd78af_0
 - biopython=1.79=py311hd4cff14_3
 - matplotlib=3.8.4=py311h38be061_2
 
-### R installation (+ dependencies) if necessary
+### R dependencies
 
-Install R packages: 
+You have to install R packages to Launch script n°3 and n°4: 
 
     * ggplot2           * ggstatsplot
     * plyr              * stringr
@@ -223,7 +230,7 @@ first field. This type of result is tagged with "_significant_" in the result
 2. If the current protein has **no** significant hit, keep the best hit if its
 _e-value_ is &le; 1.e-5.
 
-Results of annotation process are available [here](https://doi.org/10.5281/zenodo.11972386).
+Results of all annotation process are available [here](https://doi.org/10.5281/zenodo.11972386).
 Download these files and place it in the rawdata directory for use.
 
 ## 3. Trophic mode database and SSN inputs

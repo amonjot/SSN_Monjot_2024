@@ -11,7 +11,7 @@ dependencies:
   - parallel=20230722=ha770c72_0
   - pip=24.0=pyhd8ed1ab_0
   - python=3.11.9=hb806964_0_cpython
-  - r-base=4.3.3
+  - r-base=4.3.3=hf0d99cb_1
   - seqtk=1.4=he4a0461_2
   - snakemake=8.13.0=hdfd78af_0
   - biopython=1.79=py311hd4cff14_3
