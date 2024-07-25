@@ -175,10 +175,10 @@ the taxonomic annotation. Otherwise we applied this strategy:
 we transfer the affiliation as is
 - at least two affiliated protein proteins: _Lowest Common Ancestor_ strategy
 
-This step is performed with the script `metatrascriptome_scripts/map_taxo_to_unigene.py`:
+This step is performed with the script `metatranscriptome_scripts/map_taxo_to_unigene.py`:
 
 ```bash
-python3 metatrascriptome_scripts/map_taxo_to_unigene.py \
+python3 metatranscriptome_scripts/map_taxo_to_unigene.py \
     -i Unigene_taxonomy_result.tsv \
     -b unigenes.fa.transdecoder.bed \
     -o Unigene_taxonomy_result.per_Unigene.tsv
@@ -216,7 +216,7 @@ exec_annotation -o results.koFamScan.tsv --format detail-tsv --ko-list ko_list\
 ```
 
 Then, we sent the results to the _Python3_ script
-`metatrascriptome_scripts/parse_ko_hits.py`:
+`metatranscriptome_scripts/parse_ko_hits.py`:
 
 ```bash
 python3 parse_ko_hits.py --input results.koFamScan.tsv \
