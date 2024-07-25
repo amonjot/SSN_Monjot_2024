@@ -293,6 +293,7 @@ mv Metadata_Unicellular.txt SSN_env/an_files_test/
 cd SSN_env/
 snakemake -c 16
 # nohup snakemake -c 16 --rerun-incomplete > out.snakemake.txt &
+cd ..
 ```
 
 ### 4.B Find clusters and retrieve results
