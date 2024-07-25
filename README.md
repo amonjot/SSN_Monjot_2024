@@ -282,6 +282,9 @@ seqtk subseq rawdata/proteins_from_Unigenes_CEQ.fa rawdata/trsc_Unicellular.txt 
 
 ### 4.A Process network
 
+Using the Fasta and the Metadata files, we launch a snakemake pipeline which produce SSNs using diamond.
+This pipeline used a config file which target inputs and define all treshold to be used to filter general diamond alignment.
+
 ```bash
 mkdir SSN_env/tr_files_test/
 mkdir SSN_env/an_files_test/
@@ -294,6 +297,8 @@ snakemake -c 16
 
 ### 4.B Find clusters and retrieve results
 
+Using the diamond results, we recovered the derived CCs for each identity threshold used.
+
 ```bash
 nohup parallel -j 16 -k 'python3 script/1_Find_cluster.py {}' ::: 80_65_1e-50 80_70_1e-50 80_75_1e-50 80_80_1e-50 80_85_1e-50 80_90_1e-50 80_95_1e-50 80_100_1e-50 > out.find_cluster.txt &
 bash script/2_Retrieve_result.sh
@@ -301,11 +306,17 @@ bash script/2_Retrieve_result.sh
 
 ### 4.C Choose a Treshold for SSN
 
+To launch these step, please refer you to the first chapter to install R dependencies.
+We carry out different checks and benchmarks to better define the similarity threshold to be used.
+
 ```bash
 Rscript script/3_Choose_Treshold.R
 ```
 
 ### 4.D Analyses CC with the appropriate treshold
+
+In Monjot_et_al_2024A, we choose the treshold of 80% of similarity. 
+We therefore launch the script to process SSN using this treshold as following:
 
 ```
 Rscript script/4_Igraph.R 80_80_1e-50
@@ -318,9 +329,5 @@ To retrieve article figures, run following script:
 ```bash
 bash script/5_Retrieve_Figures.sh 80_80_1e-50
 ```
-
-* script: 5_Retrieve_Figures.sh
-* argument 1: 80_80_1e-50
-* This takes just a few seconds on [Dual CPU] Intel(R) Xeon(R) CPU E5-2670 with 512 Go of RAM
 
 The resulting figures can be found in *Monjot_etal_2024/* directory.
