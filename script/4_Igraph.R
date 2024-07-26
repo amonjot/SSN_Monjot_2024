@@ -829,7 +829,7 @@ for (Tmode in c("PARA","SAP","HET","PHOTO","MIXO")) {
   #ko
   df_bary <- CC_bary %>% select(CC, ko) %>% distinct(CC, ko)
   df_bary <- separate_rows(df_bary,"ko",sep=",") %>% mutate(sum = 1) %>% group_by(ko,sum) %>% summarize(CC=paste(unique(CC),collapse=","),sum(sum))
-  df_bary <- df_bary %>% mutate(CDT = length(intersect(unlist(str_split(CC,pattern=",")),interest_CC_majorPARA))) %>% filter(CDT > 0) %>% filter(ko != "Unassigned")
+  df_bary_subset <- df_bary %>% mutate(CDT = length(intersect(unlist(str_split(CC,pattern=",")),interest_CC_majorPARA))) %>% filter(CDT > 0) %>% filter(ko != "Unassigned")
   #
   #Barycentre
   for (i in row.names(df_bary_subset)) { 
