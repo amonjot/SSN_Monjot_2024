@@ -331,10 +331,14 @@ Polar_data_b <- Polar_data_b %>% mutate(`Taxonomic group`=paste0(`Taxonomic grou
 legend_a <- get_legend(ggplot(data = Polar_data_b) + theme_unique_darkcris() +
                          geom_bar(mapping = aes(y= Proportion, fill = `Taxonomic group`)) + guides(fill = guide_legend(override.aes = list(color="black",shape=1))) + 
                          scale_fill_manual(values=noquote(Polar_data_b$color)))
-legend_b <- get_legend(ggplot(data = Polar_data %>% arrange(`Trophic mode`)) + theme_unique_darkcris() + guides(fill="Functional assignment") +
+Polar_data_legend <- Polar_data %>% select(`Trophic mode`,Proportion) %>% group_by(`Trophic mode`) %>% summarise_all(sum)
+Polar_data_legend <- Polar_data_legend %>% mutate(`Trophic mode` = paste0(`Trophic mode`,": ",round(Proportion,1),"%"))
+legend_b <- get_legend(ggplot(data = Polar_data_legend %>% arrange(`Trophic mode`)) + theme_unique_darkcris() + guides(fill="Functional assignment") +
                          geom_bar(mapping = aes(y= Proportion, fill = `Trophic mode`)) + guides(fill = guide_legend(override.aes = list(color="black",shape=1))) + 
                          scale_fill_manual(values=noquote(unique((Polar_data %>% arrange(`Trophic mode`))$color))))
-legend_c <- get_legend(ggplot(data = Polar_data_all %>% arrange(`Parasitic lifestyle`)) + theme_unique_darkcris() + guides(fill="Parasitic lifestyle") +
+Polar_data_all_legend <- as.data.frame(Polar_data_all) %>% select(`Parasitic lifestyle`,Proportion) %>% group_by(`Parasitic lifestyle`) %>% summarise_all(sum)
+Polar_data_all_legend <- Polar_data_all_legend %>% mutate(`Parasitic lifestyle` = paste0(`Parasitic lifestyle`,": ",round(Proportion,1),"%"))
+legend_c <- get_legend(ggplot(data = Polar_data_all_legend %>% arrange(`Parasitic lifestyle`)) + theme_unique_darkcris() + guides(fill="Parasitic lifestyle") +
                          geom_bar(mapping = aes(y= Proportion, fill = `Parasitic lifestyle`)) + guides(fill = guide_legend(override.aes = list(color="black",shape=1))) + 
                          scale_fill_manual(values=noquote((Polar_data_all %>% select(`Parasitic lifestyle`, color) %>% distinct() %>% arrange(`Parasitic lifestyle`,.locale="en"))$color)))
 #
@@ -458,8 +462,8 @@ table_CC <- stat_input_df %>% select(CC) %>%
   for (GRP in c("PARA","SAP","HET","PHOTO","MIXO")) {
     table <- paste("interest",GRP,"id",sep ="_")
     assign(table,stat_input_df %>% filter(TRT_1==GRP) %>% select(CC) %>% distinct())
-  TRT_Stat_data <- stat_input_df %>% select(CC,TRT_1) %>% filter(CC %in% get(table)$CC)
-  TRT_Stat_data <- TRT_Stat_data %>% group_by(CC, TRT_1) %>% 
+    TRT_Stat_data <- stat_input_df %>% select(CC,TRT_1) %>% filter(CC %in% get(table)$CC)
+    TRT_Stat_data <- TRT_Stat_data %>% group_by(CC, TRT_1) %>% 
     summarise(total_count=n(),
               .groups = 'drop')
   assign(paste0('interest_CC_75percent_major',GRP),vector())
@@ -474,10 +478,10 @@ table_CC <- stat_input_df %>% select(CC) %>%
     if (is.na(unknown_i)==TRUE) {unknown_i <- 0}
     if (is.na(GRP_i)==TRUE) {GRP_i <- 0}
     if (is.na(other_i)==TRUE) {other_i <- 0}
-    if (GRP_i/3 >= other_i) { assign(paste0('interest_CC_75percent_major',GRP),c(get(paste0('interest_CC_75percent_major',GRP)),i)) } # au moins 75 % des associated sont des PARA
-    if (GRP_i >= other_i) { assign(paste0('interest_CC_50percent_major',GRP),c(get(paste0('interest_CC_50percent_major',GRP)),i)) } # au moins 50 % des associated sont des PARA
-    if (GRP_i > 0 & other_i == 0) { assign(paste0('interest_CC_100percent_major',GRP),c(get(paste0('interest_CC_100percent_major',GRP)),i)) } # 100% des associated sont des PARA
-    if (GRP_i > 0 & other_i == 0 & unknown_i == 0) { assign(paste0('interest_CC_100percent_only',GRP),c(get(paste0('interest_CC_100percent_only',GRP)),i)) } # 100% des prot sont des PARA
+    if (GRP_i/3 >= other_i) { assign(paste0('interest_CC_75percent_major',GRP),c(get(paste0('interest_CC_75percent_major',GRP)),i)) } # at least 75 % of the associated proteins are PARA
+    if (GRP_i >= other_i) { assign(paste0('interest_CC_50percent_major',GRP),c(get(paste0('interest_CC_50percent_major',GRP)),i)) } # at least 50 % of the associated proteins are PARA
+    if (GRP_i > 0 & other_i == 0) { assign(paste0('interest_CC_100percent_major',GRP),c(get(paste0('interest_CC_100percent_major',GRP)),i)) } # 100% of the associated proteins are PARA
+    if (GRP_i > 0 & other_i == 0 & unknown_i == 0) { assign(paste0('interest_CC_100percent_only',GRP),c(get(paste0('interest_CC_100percent_only',GRP)),i)) } # 100% of proteins are PARA
   }
 #
   assign(paste("data",GRP,"stat_i",sep="_"),tibble())
@@ -721,7 +725,7 @@ for (Tmode in c("PARA","SAP","HET","PHOTO","MIXO")) {
   # Bartlett
     bartlett.test(data = x, value ~ group) # p-value < 0.05 : Bartlett test is not validate => necessity to make non-parametric test
   # Wilcox 
-  wilcox_x <- x %>% wilcox_test(value ~ group, paired = FALSE, p.adjust.method = "bonferroni")
+  wilcox_x <- x %>% wilcox_test(value ~ group, paired = TRUE, p.adjust.method = "bonferroni")
   wilcox_x
   # graph
     wilcox_x_data <- wilcox_x %>% add_xy_position(x = "group", fun = "max")
@@ -736,7 +740,7 @@ for (Tmode in c("PARA","SAP","HET","PHOTO","MIXO")) {
   SAP <- (data_SAP_stat_i %>% filter(Category == "interest_CC_75percent_majorSAP"))$CC
   CC_int <- unique(c(HET,MIXO,PHOTO,PARA,SAP))
 #
-    # CCA ggplot2 TRT_1 ----------------------------------------------------------------
+    # CA ggplot2 TRT_1 ----------------------------------------------------------------
   stat_input_df_pcoa <- stat_input_df %>% select(CC,TRT_1)
   table_pcoa <- as.data.frame.matrix(table(stat_input_df_pcoa))
   #
@@ -766,7 +770,7 @@ for (Tmode in c("PARA","SAP","HET","PHOTO","MIXO")) {
   coord.x$Functional_group[coord.x[,"Functional_group"] == "PHOTO"] <- "Phototrophs"
   coord.x$Functional_group[coord.x[,"Functional_group"] == "SAP"] <- "Saprotrophs"
   Xseq <- fviz_screeplot(res.ca,addlabels = TRUE, ylim = c(0,50), barfill = "maroon", barcolor = "black") + theme_unique_art()
-  svglite(paste0("Analysis/CCA_TRT_eig.svg"),width = 6.00,height = 4.00)
+  svglite(paste0("Analysis/CA_TRT_eig.svg"),width = 6.00,height = 4.00)
   print(Xseq)
   dev.off()
   Xseq <- Xseq$data
@@ -814,10 +818,10 @@ for (Tmode in c("PARA","SAP","HET","PHOTO","MIXO")) {
     scale_y_continuous(position = 'right') + theme(legend.position = "none")
   
   b_plot <- plot_grid(pcoa_plot_c, pcoa_plot_d, LEGEND_a,ncol = 3, nrow = 1, rel_widths = c(3,3,1),rel_heights = c(3))
-  svglite(paste0("Analysis/CCA_TRT.svg"),width = 14.00,height = 8.00)
+  svglite(paste0("Analysis/CA_TRT.svg"),width = 14.00,height = 8.00)
   plot(b_plot)
   dev.off()
-    # CCA barycentre KO -------------------------------------------------------
+    # CA barycentre KO -------------------------------------------------------
   #Filter obligate
   Obligate_PARA_CC <- unique(stat_input_df[,"CC"][stat_input_df[,"TRT_1"]=="PARA" & stat_input_df[,"TYP_1"]=="Obligate"])
   interest_CC_majorPARA <- PARA[PARA %in% Obligate_PARA_CC]
@@ -855,9 +859,12 @@ for (Tmode in c("PARA","SAP","HET","PHOTO","MIXO")) {
   find_hull <- function(df) df[chull(df$`Dim 1`, df$`Dim 2`), ]
   hulls <- ddply(df, "TYPE", find_hull)
   #
-  LEGEND_a <- get_legend(pcoa_plot_c <- ggplot() + theme_unique_art() + labs(title="",color="Trophic mode",fill = "CCs", x= Dim1, y=Dim2) + 
-                           theme(legend.text=element_text(size=12),legend.position = "right") + scale_fill_manual(values = palet_tree_grp) +
-                           geom_point(data=coord.y,aes(x=`Dim 1`,y=`Dim 2`,fill = TYPE),  shape = 21, color =c("black")) + guides(fill = guide_legend(override.aes = list(size = 3))))
+  df_bary_subset_legend <- df_bary_subset %>% mutate(uptwo = ifelse(ko %in% df_bary_subsetx$ko,"≥ 2","< 2"))
+  LEGEND_a <- get_legend(pcoa_plot_c <- ggplot() + theme_unique_art() + labs(title="",color="Trophic mode",fill = "CCs",alpha = "Barycenter coordinates\non the dimension 1", x= Dim1, y=Dim2) + 
+                           geom_point(data=df_bary_subset_legend,aes(x=`Dim1j`,y=`Dim2j`,alpha = uptwo), size = 2, shape = 8, stroke =1,color ='black') +
+                           theme(legend.text=element_text(size=12),legend.position = "right") + scale_fill_manual(values = palet_tree_grp) + scale_alpha_manual(values = c(0.5,1)) +
+                           geom_point(data=coord.y,aes(x=`Dim 1`,y=`Dim 2`,fill = TYPE),  shape = 21, color =c("black")) + guides(fill = guide_legend(override.aes = list(size = 3)),
+                                                                                                                                  alpha = guide_legend(override.aes = list(size = 3))))
   #
   pcoa_plot_c <- ggplot() + theme_unique_art() + 
     theme(legend.text=element_text(size=12),legend.position = "right") + 
@@ -874,8 +881,8 @@ for (Tmode in c("PARA","SAP","HET","PHOTO","MIXO")) {
     labs(title="",color="Trophic mode",fill = "CCs", x= Dim1, y=Dim2) +
     scale_y_continuous(position = 'left') + theme(legend.position = "none")
   #
-  b_plot <- plot_grid(pcoa_plot_c, LEGEND_a,ncol = 2, nrow = 1, rel_widths = c(4,0.5),rel_heights = c(3))
-  svglite(paste0("Analysis/CCA_TRT_Barycentre_obligatePARA.svg"),width = 16.00,height = 10.00)
+  b_plot <- plot_grid(pcoa_plot_c, LEGEND_a,ncol = 2, nrow = 1, rel_widths = c(4,0.8),rel_heights = c(3))
+  svglite(paste0("Analysis/CA_TRT_Barycentre_obligatePARA.svg"),width = 16.00,height = 10.00)
   plot(b_plot)
   dev.off()
 #
@@ -1179,10 +1186,14 @@ for (Tmode in c("PARA","SAP","HET","PHOTO","MIXO")) {
     legend_a <- get_legend(ggplot(data = Polar_data_b) + theme_unique_darkcris() +
                              geom_bar(mapping = aes(y= Proportion, fill = `Taxonomic group`)) + guides(fill = guide_legend(override.aes = list(color="black",shape=1))) + 
                              scale_fill_manual(values=noquote(Polar_data_b$color)))
-    legend_b <- get_legend(ggplot(data = Polar_data %>% arrange(`Trophic mode`)) + theme_unique_darkcris() + guides(fill="Functional assignment") +
+    Polar_data_legend <- Polar_data %>% select(`Trophic mode`,Proportion) %>% group_by(`Trophic mode`) %>% summarise_all(sum)
+    Polar_data_legend <- Polar_data_legend %>% mutate(`Trophic mode` = paste0(`Trophic mode`,": ",round(Proportion,1),"%"))
+    legend_b <- get_legend(ggplot(data = Polar_data_legend %>% arrange(`Trophic mode`)) + theme_unique_darkcris() + guides(fill="Functional assignment") +
                              geom_bar(mapping = aes(y= Proportion, fill = `Trophic mode`)) + guides(fill = guide_legend(override.aes = list(color="black",shape=1))) + 
                              scale_fill_manual(values=noquote(unique((Polar_data %>% arrange(`Trophic mode`))$color))))
-    legend_c <- get_legend(ggplot(data = Polar_data_all %>% arrange(`Parasitic lifestyle`)) + theme_unique_darkcris() + guides(fill="Parasitic lifestyle") +
+    Polar_data_all_legend <- as.data.frame(Polar_data_all) %>% select(`Parasitic lifestyle`,Proportion) %>% group_by(`Parasitic lifestyle`) %>% summarise_all(sum)
+    Polar_data_all_legend <- Polar_data_all_legend %>% mutate(`Parasitic lifestyle` = paste0(`Parasitic lifestyle`,": ",round(Proportion,1),"%"))
+    legend_c <- get_legend(ggplot(data = Polar_data_all_legend %>% arrange(`Parasitic lifestyle`)) + theme_unique_darkcris() + guides(fill="Parasitic lifestyle") +
                              geom_bar(mapping = aes(y= Proportion, fill = `Parasitic lifestyle`)) + guides(fill = guide_legend(override.aes = list(color="black",shape=1))) + 
                              scale_fill_manual(values=noquote((Polar_data_all %>% select(`Parasitic lifestyle`, color) %>% distinct() %>% arrange(`Parasitic lifestyle`,.locale="en"))$color)))
     #
@@ -1255,12 +1266,13 @@ for (Tmode in c("PARA","SAP","HET","PHOTO","MIXO")) {
   svglite("Igraph/CC_containing75PARA_CC_PARA_obligate_KO_50most_abundant.svg",width = 26.00,height = 14.00)
     ggraph(graph_ix, layout = 'stress') + 
       geom_edge_link(color="#7b7b7b7b") + 
-      geom_node_point(aes(shape=TRT_1,fill=Class, size=TRT_2,color=ko_yn)) +
+      geom_node_point(aes(shape=TRT_1,fill=Class,color=ko_yn),size = 3) +
       #geom_node_text(aes(label = ko), colour = 'black', vjust = 0.4) + 
       scale_fill_manual(values = c("#303f9f","#ef5350","#fbc02c","maroon","grey","#ee7620","red4","limegreen","#4cc6da","black","#98a5ff","lightgreen","blue4","#2B9B81FF","#1F6E9CFF","#41acc1","#E87B89FF","#424242","#E69F00","white","green","#92C051FF","green4","#633372FF","#56B4E9","#009E73","pink","green","#F0E442","#0072B2")) + 
       scale_shape_manual(values = c(25,22,23,21,24,20)) + 
       scale_color_manual(values = c("black","white")) + 
-      scale_size_manual(values = c(3, 5)) + facet_nodes(.~ko_compo, scales = "free",nrow = 7) + 
+      scale_size_manual(values = c(3, 5)) + 
+      facet_nodes(.~ko_compo, scales = "free",nrow = 7) + 
       labs(title="",fill="Taxonomy", shape = "Trophic modes", size = "Parasite Y/N", color = "Kegg ID") + 
       guides(fill = guide_legend(ncol=1,override.aes = list(shape = 21, size = 4)), color = guide_legend(override.aes = list(shape = 21, size = 4, fill = "grey")),size = guide_legend(override.aes = list(shape = 21)), shape = guide_legend(override.aes = list(size = 4))) +
       theme_unique_art_graph()

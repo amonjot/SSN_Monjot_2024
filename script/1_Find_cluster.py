@@ -6,7 +6,7 @@ Created on 22/07/2024
 @authors: jeremy & arthur
 """
 
-# importation des modules
+# Import modules
 import igraph as ig
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -14,10 +14,10 @@ import os
 import numpy as np
 import sys
 
-# choix du répertoire de travail
+# Set working directory
 os.chdir("SSN_env/results/")
 
-# variables en entré
+# Set inputs
 condition_name = sys.argv[1]
 edges_name = "diamond_ssn_"+condition_name+".edges"
 nodes_name = "attributes/Metadata_Unicellular.attributes"
@@ -25,26 +25,25 @@ nodes_name = "attributes/Metadata_Unicellular.attributes"
 #print(condition_name)
 #print(nodes_name)
 
-# importation des dataframe contenant 
-# les informations concernant les noeuds
-# les informations concernant les arrêtes
+# Import dataframes containing ...
+# ... edges
 edges = pd.read_csv(edges_name, sep = ";")
+# ... nodes
 nodes = pd.read_csv(nodes_name, sep = ";")
 
-# création du graph a partir des deux dataframe
+# Create graph from the two dataframes
 g = ig.Graph.DataFrame(edges, directed=False, use_vids=False, vertices = nodes)
 del_vert_isol = [v.index for v in g.vs if v.degree() == 0]
 
-# création du dataframe contenant les informations concernant les noeuds conservé
-# pour la centralité
+# Create dataframe containing information about the nodes retained for centrality
 lst_vs_attrib = g.vertex_attributes()
 lst_vs_attrib.insert(0, "CC")
-# dataframe de la centralité
+# Centrality dataframe
 df_central_seq = pd.DataFrame(columns = lst_vs_attrib)
-# dataframe de toutes les composantes
+# Dataframe with all connected component
 df_cc = pd.DataFrame(columns=lst_vs_attrib)
 
-## décompostion en sous graphs avec au moins n sommets
+## Decomposition into sub-graphs with at least n vertices (here, n=3)
 g_sub = g.decompose(minelements=3)
 #g_sub = g.decompose()
 #print(g.es.attributes())
@@ -53,7 +52,7 @@ lst_attribut = ['alignment_len', 'pident', 'bitscore']
 count=0
 for i in g_sub:
 
-##    récupération du noeud le plus centrale
+##    recovery of the most central node
 
 #    lst_of_lst_centricity = []
 #    for attrib in lst_attribut:
@@ -65,29 +64,29 @@ for i in g_sub:
 #    lst_sum = np.sum(res_lst_max, axis=0)
 #    central_node = lst_sum.argmax(axis=0)
 
-## Création d'un dataframe contenant les informations de chaque noeuds de chaque composante
+## Create dataframe containing information for each node in each component
 
     df_sub_cc = i.get_vertex_dataframe()
     df_sub_cc.insert(0, "CC", count)
     df_cc = pd.concat([df_cc, df_sub_cc])
 
-## création d'un dataframe contenant les séquences représentative des cc
+## Create dataframe containing sequences representative of cc
 
 #    df_central_seq = pd.concat([df_central_seq, df_sub_cc.iloc[[central_node]]])
     count += 1
 
 
-## Fichier statistique
+## Statistic files
 
 with open(f"ssn_statistique_{condition_name}.txt", "w") as f:
-    f.write("statistique\n")
-    f.write(f"Nombre de séquences intiale : {len(nodes)}\n")
-    f.write(f"Nombre de séquences conservés après filtration : {len(df_cc)}\n")
-    f.write(f"Nombre de composante connexe : {len(g_sub)}\n")
-#    f.write(f"Nombre de séquences de référence : {len(df_central_seq)}")
+    f.write("Statistics\n")
+    f.write(f"Number of initial sequences: {len(nodes)}\n")
+    f.write(f"Number of sequences retained after filtration: {len(df_cc)}\n")
+    f.write(f"Number of connected components: {len(g_sub)}\n")
+#    f.write(f"Number of reference sequences: {len(df_central_seq)}")
 
 
-## Sauvegarde des différentes informations
+## Save network and connected componant informations
 
 ig.Graph.write_pickle(g, f"ssn_graph_{condition_name}.pickle")
 df_cc.to_csv(f"ssn_composantes_connexes_graph_{condition_name}.csv", index=False, sep=";")
