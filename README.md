@@ -2,9 +2,9 @@
 
 **This is a workflow to reproduce analysis conduced in Monjot et al., 2025**
 
-First, clone github repository: `git clone https://github.com/amonjot/SSN_Monjot_2025.git`
+First, clone github repository: `git clone https://github.com/amonjot/SSN_Monjot_2024.git`
 
-Second, define current directory: `cd SSN_Monjot_2025`
+Second, define current directory: `cd SSN_Monjot_2024`
 
                                         *******************************
                                             Directory organization
