@@ -1,18 +1,18 @@
 # **Metatranscriptomes-based sequence similarity networks uncover genetic signatures within parasitic freshwater microbial eukaryotes**
 
-**This is a workflow to reproduce analysis conduced in Monjot et al., 2024**
+**This is a workflow to reproduce analysis conduced in Monjot et al., 2025**
 
-First, clone github repository: `git clone https://github.com/amonjot/SSN_Monjot_2024.git`
+First, clone github repository: `git clone https://github.com/amonjot/SSN_Monjot_2025.git`
 
-Second, define current directory: `cd SSN_Monjot_2024`
+Second, define current directory: `cd SSN_Monjot_2025`
 
                                         *******************************
                                             Directory organization
                                         *******************************
-    SSN_Analysis_Monjot_et_al._2024
+    SSN_Analysis_Monjot_et_al._2025
     |-> rawdata (sub-directory for trophic modes table and metadata)
         |-> ko_to_hierarchy.txt (KO id definition table from https://www.genome.jp/kegg-bin/show_brite?ko00001.keg)
-        |-> Table_S1.tsv (own in-house trophic modes database (Monjot et al., 2024))
+        |-> Table_S1.tsv (own in-house trophic modes database (Monjot et al., 2025))
         |-> annotation_ko.tsv (The output of the KO annotation step using koFamScan) [https://doi.org/10.5281/zenodo.11972386]
         |-> proteins_from_Unigenes_CEQ.fa (The proteins fasta file provided by the proteins prediction step after filtration) [https://doi.org/10.5281/zenodo.11972386]
         |-> table_taxonomy.perUnigene.allUnigenes.tsv (The output of the taxonomic affiliation against MetaEuk) [https://doi.org/10.5281/zenodo.11972386]
@@ -321,7 +321,7 @@ Rscript script/3_Choose_Treshold.R
 
 ### 4.D Analyses CC with the appropriate treshold
 
-In Monjot_et_al_2024A, we choose the treshold of 80% of similarity. 
+In Monjot et al., 2025, we choose the treshold of 80% of similarity. 
 We therefore launch the script to process SSN using this treshold as following:
 
 ```
@@ -336,4 +336,4 @@ To retrieve article figures, run following script:
 bash script/5_Retrieve_Figures.sh 80_80_1e-50
 ```
 
-The resulting figures can be found in *Monjot_etal_2024/* directory.
+The resulting figures can be found in *Monjot_et_al_2025/* directory.
